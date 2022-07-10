@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@hapi/joi": "^17.1.1",
+    "@perfective/common": "^0.8.0",
     "@types/express": "^4.17.13",
     "bcrypt": "^5.0.1",
     "cloudinary": "^1.30.0",
@@ -40,6 +41,7 @@
     "multer": "^1.4.5-lts.1",
     "node-fetch": "^2.6.7",
     "on-headers": "^1.0.2",
+    "redis": "^4.2.0",
     "sticky-session": "^1.1.2",
     "uuid": "^8.3.2",
     "winston": "^3.8.1",
