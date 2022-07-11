@@ -4,7 +4,7 @@ import ConnectRedis, { RedisStoreOptions } from 'connect-redis';
 
 import { Logger } from 'winston';
 
-export function configureMongoDBStore(
+export function configureRedisStore(
     logger: Logger,
     redisClientOptions: ConstructorParameters<typeof Redis> = [],
     redisStoreOptions: Partial<Omit<RedisStoreOptions, 'client'>> = {},
