@@ -1,6 +1,6 @@
 import { createLogger, format, transports } from 'winston';
 
-export const initLogger = () => {
+export const configureFileLogger = (isProduction: boolean) => {
     const logger = createLogger({
         exitOnError: false,
         format: format.json(),
@@ -21,7 +21,7 @@ export const initLogger = () => {
         new transports.File({ filename: 'exceptions.log' })
     );
 
-    if(process.env.NODE_ENV !== 'production') {
+    if (!isProduction) {
         logger.add(new transports.Console({
             format: format.simple(),
         }))

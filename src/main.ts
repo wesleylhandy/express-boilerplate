@@ -2,15 +2,18 @@ import cluster from "cluster";
 import http from "http";
 // import socketIO from "socket.io"; TODO: Add WS support
 import sticky from "sticky-session"; // to enable sticky sessions
-import { expressApp } from "./server/app";
-import { initLogger } from './utils/logger'
+import { configureWorkerApp } from "./server/worker";
+import { valueFromEnvironment, EnvVars } from "./utils/environment-variables";
+import { configureFileLogger } from './utils/logger'
 
 const workerId = cluster.worker?.id ?? process.pid;
 const id = cluster.isPrimary ? process.pid : workerId;
 process.title = cluster.isPrimary ? 'ClusterServer' : `Worker ${workerId}`;
 
-const logger = initLogger();
-const app = expressApp(id, logger);
+const isProduction = valueFromEnvironment(EnvVars.NODE_ENV) === 'production'
+
+const logger = configureFileLogger(isProduction);
+const app = configureWorkerApp({ workerId: id, logger, isProduction });
 
 const server = http.createServer(app);
 // const io = socketIO(server); // for socket support

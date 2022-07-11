@@ -1,10 +1,10 @@
 import { MongoClient } from "mongodb";
+import { EnvVars, valueFromEnvironment } from "src/utils/environment-variables";
 
-export const connectToMongoDB = async (dbname = "test") => {
-  const uri =
-    process.env.MONGODB_CONNECT_STRING || `mongodb://localhost:27017/${dbname}`;
-  const mongoClient = new MongoClient(uri);
+export async function connectToMongoDB(dbname = "test") {
+  const uri = valueFromEnvironment<string>(EnvVars.MONGODB_CONNECT_STRING) ?? `mongodb://localhost:27017/${dbname}`;
   try {
+    const mongoClient = new MongoClient(uri);
     const connection = await mongoClient.connect();
     if (connection instanceof MongoClient) {
       return connection;

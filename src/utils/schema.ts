@@ -19,3 +19,4 @@ export const UserSchema = Joi.object<{
   .xor("password", "access_token")
   .with("repeat_password", "password");
 
+export const CurrentUserIdSchema = Joi.string().required();

@@ -3,10 +3,12 @@ import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import onHeaders from "on-headers";
 import { v4 as uuidv4 } from "uuid";
 import { decrypt, encrypt } from "./crypto"
-import util from "util";
 import crypto, { BinaryLike, KeyObject} from "crypto";
 import { CsrfError } from "./csrf-error";
 import { Algorithms } from "../contants/encryption";
+import { EnvVars, valueFromEnvironment } from "./environment-variables";
+
+// TODO: Refactor and simplify
 
 export const defaultIV = crypto.randomBytes(256);
 
@@ -60,7 +62,7 @@ const resolveDomain = (req: Request) => {
     * pack: serialize, encrypt and sign a javascript object token
     * unpack: verify, decrypt and deserialize an jwt token
  */
-interface Options {
+export interface JwtCsrfConfigurationOptions {
   getCookieDomain?: (req: Request) => string;
   getUserToken: (req: Request) => string | null;
   baseUrl?: string;
@@ -83,7 +85,7 @@ interface Token {
   } & { [x: string]: unknown }
 }
 const JWT = {
-  pack: (token: unknown, options: Options ) => {
+  pack: (token: unknown, options: JwtCsrfConfigurationOptions ) => {
     // Attempt to serialize and encrypt the token
     const encryptedToken = {
       token: encrypt(
@@ -103,7 +105,7 @@ const JWT = {
     });
   },
 
-  unpack: (token: string, options: Options )=> {
+  unpack: (token: string, options: JwtCsrfConfigurationOptions )=> {
     let encryptedPayload: string | JwtPayload;
 
     try {
@@ -146,14 +148,14 @@ const JWT = {
 
 const PERSISTENCE_DRIVERS = {
   header: {
-    drop: (_req: Request, res: Response, options: Options, jwtToken: string) => {
+    drop: (_req: Request, res: Response, options: JwtCsrfConfigurationOptions, jwtToken: string) => {
       var headerName = options.headerName || DEFAULT_HEADER_NAME;
 
       res.setHeader(headerName, jwtToken);
       res.setHeader(headerName + "-hash", hash(options.secret, jwtToken));
     },
 
-    retrieve: (req: Request, res: Response, options: Options) => {
+    retrieve: (req: Request, res: Response, options: JwtCsrfConfigurationOptions) => {
       const headerName = options.headerName || DEFAULT_HEADER_NAME;
 
       let jwtToken = req.headers[headerName];
@@ -179,13 +181,13 @@ const PERSISTENCE_DRIVERS = {
   },
 
   cookie: {
-    drop: (req: Request, res: Response, options: Options, jwtToken: string) => {
+    drop: (req: Request, res: Response, options: JwtCsrfConfigurationOptions, jwtToken: string) => {
       const secure = Boolean(
-        process.env.DEPLOY_ENV || req.protocol === "https"
+        valueFromEnvironment(EnvVars.DEPLOY_ENV) ?? req.protocol === "https"
       );
       const expires = Date.now() + 1000 * 60 * 60 * 24 * 7; // 1 week
 
-      res.cookie(options.headerName || DEFAULT_HEADER_NAME, jwtToken, {
+      res.cookie(options.headerName ?? DEFAULT_HEADER_NAME, jwtToken, {
         secure: secure,
         httpOnly: true,
         domain: options.getCookieDomain
@@ -195,8 +197,8 @@ const PERSISTENCE_DRIVERS = {
       });
     },
 
-    retrieve: (req: Request, res: Response, options: Options) => {
-      return req.cookies[options.headerName || DEFAULT_HEADER_NAME];
+    retrieve: (req: Request, res: Response, options: JwtCsrfConfigurationOptions) => {
+      return req.cookies[options.headerName ?? DEFAULT_HEADER_NAME];
     }
   }
 };
@@ -220,13 +222,13 @@ const CSRF_DRIVERS = {
       header: true
     },
 
-    generate: (req: Request, res: Response, options: Options) => {
+    generate: (req: Request, res: Response, options: JwtCsrfConfigurationOptions) => {
       return {
         uid: options.getUserToken(req)
       };
     },
 
-    verify: (req: Request, res: Response, options: Options, tokens: Token) => {
+    verify: (req: Request, res: Response, options: JwtCsrfConfigurationOptions, tokens: Token) => {
       // tokens.header will always be an object
       if (Object.keys(tokens.header).length === 0) {
         throw new CsrfError("TOKEN_NOT_IN_HEADER");
@@ -250,13 +252,13 @@ const CSRF_DRIVERS = {
       header: true
     },
 
-    generate: (req: Request, res: Response, options: Options) => {
+    generate: (req: Request, res: Response, options: JwtCsrfConfigurationOptions) => {
       return {
         id: uuidv4()
       };
     },
 
-    verify: (req: Request, res: Response, options: Options, tokens: Token) => {
+    verify: (req: Request, res: Response, options: JwtCsrfConfigurationOptions, tokens: Token) => {
       if (!Object.keys(tokens.header).length) {
         throw new CsrfError("TOKEN_NOT_IN_HEADER");
       }
@@ -281,14 +283,14 @@ const CSRF_DRIVERS = {
       header: true
     },
 
-    generate: (req: Request, res: Response, options: Options) => {
+    generate: (req: Request, res: Response, options: JwtCsrfConfigurationOptions) => {
       return {
         uid: options.getUserToken(req),
         id: uuidv4()
       };
     },
 
-    verify: (req: Request, res: Response, options: Options, tokens: Token) => {
+    verify: (req: Request, res: Response, options: JwtCsrfConfigurationOptions, tokens: Token) => {
       if (!Object.keys(tokens.header).length) {
         throw new CsrfError("TOKEN_NOT_IN_HEADER");
       }
@@ -342,7 +344,7 @@ const CSRF_DRIVERS = {
     }
  */
 
-const generate = (req: Request, res: Response, options: Options) => {
+const generate = (req: Request, res: Response, options: JwtCsrfConfigurationOptions) => {
   // Determine which driver to use to generate the token
   const csrfDriver = options.csrfDriver || DEFAULT_CSRF_DRIVER;
   const driver = CSRF_DRIVERS[csrfDriver];
@@ -379,7 +381,7 @@ const generate = (req: Request, res: Response, options: Options) => {
     The persistence layers used will be those valid for the passed csrfType.
  */
 
-const drop = (req: Request, res: Response, options: Options) => {
+const drop = (req: Request, res: Response, options: JwtCsrfConfigurationOptions) => {
   // Generate the jwt tokens we need to drop
   const jwtTokens = generate(req, res, options);
 
@@ -407,7 +409,7 @@ const drop = (req: Request, res: Response, options: Options) => {
     }
  */
 
-const read = (req: Request, res: Response, options: Options, persistenceDriver: keyof typeof PERSISTENCE_DRIVERS) => {
+const read = (req: Request, res: Response, options: JwtCsrfConfigurationOptions, persistenceDriver: keyof typeof PERSISTENCE_DRIVERS) => {
   const jwtToken = PERSISTENCE_DRIVERS[persistenceDriver].retrieve(
     req,
     res,
@@ -452,7 +454,7 @@ const read = (req: Request, res: Response, options: Options, persistenceDriver: 
     }
  */
 
-const retrieve = (req: Request, res: Response, options: Options, csrfDriver: keyof typeof CSRF_DRIVERS) => {
+const retrieve = (req: Request, res: Response, options: JwtCsrfConfigurationOptions, csrfDriver: keyof typeof CSRF_DRIVERS) => {
   const driver = CSRF_DRIVERS[csrfDriver];
   // console.log({ driver });
   // Build an object of tokens
@@ -477,7 +479,7 @@ const retrieve = (req: Request, res: Response, options: Options, csrfDriver: key
     Throw a CsrfError on any verification failures.
  */
 
-const verify = (req: Request, res: Response, options: Options) => {
+const verify = (req: Request, res: Response, options: JwtCsrfConfigurationOptions) => {
   // First we need to get the header first to figure out which csrfDriver we need to verify
   const headerToken = read(req, res, options, "header");
   // console.log({ csrfDriver: headerToken.csrfDriver });
@@ -494,7 +496,7 @@ const verify = (req: Request, res: Response, options: Options) => {
   return CSRF_DRIVERS[csrfDriver].verify(req, res, options, tokens);
 };
 
-export const getHeaderToken = (req: Request, res: Response, options: Options) => {
+export const getHeaderToken = (req: Request, res: Response, options: JwtCsrfConfigurationOptions) => {
   const csrfDriver = options.csrfDriver || DEFAULT_CSRF_DRIVER;
   const token = CSRF_DRIVERS[csrfDriver].generate(req, res, options);
 
@@ -507,7 +509,7 @@ export const getHeaderToken = (req: Request, res: Response, options: Options) =>
   return JWT.pack(payload, options);
 };
 
-export const middleware = (options: Options) => {
+export const middleware = (options: JwtCsrfConfigurationOptions) => {
   const csrfDriver = options.csrfDriver || DEFAULT_CSRF_DRIVER;
 
   if (/AUTHED_TOKEN|AUTHED_DOUBLE_SUBMIT/.test(csrfDriver)) {
@@ -530,7 +532,7 @@ export const middleware = (options: Options) => {
     // An array to show us the matching excluded urls. If this array
     // contains any values, we should skip out and allow.
     let urlToTest: string;
-    let excludeTheseUrls: Options['excludeUrls'];
+    let excludeTheseUrls: JwtCsrfConfigurationOptions['excludeUrls'];
 
     // Set JWT in header and cookie before response goes out
     // This is done in onHeaders since we need to wait for any service
