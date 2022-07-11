@@ -3,7 +3,7 @@ import { IUsersDao } from "../../models/i-users-dao";
 import { UserSchema } from "../../utils/schema";
 import { Logger } from "winston";
 import { isAbsent } from '@perfective/common'
-import { signedToken } from "src/utils/sign-token";
+import { signedToken } from "../../utils/sign-token";
 
 export async function handleSignup(logger: Logger, usersDAO?: IUsersDao) {
     return async (request: Request<never, unknown, { username: string; password: string; repeat_password: string }>, response: Response) => {

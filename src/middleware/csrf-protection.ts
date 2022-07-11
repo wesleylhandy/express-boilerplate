@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { Express, Request } from 'express';
-import { EnvVars, valueFromEnvironment } from 'src/utils/environment-variables';
+import { EnvVars, valueFromEnvironment } from '../utils/environment-variables';
 import * as jwtCSRF from '../utils/jwt-csrf'
 import { isAbsent } from '@perfective/common'
 

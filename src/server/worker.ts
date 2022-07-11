@@ -5,7 +5,7 @@ import { EnvVars, valueFromEnvironment } from '../utils/environment-variables';
 import { subdomainMiddlware } from '../middleware/subdomain';
 import { developmentLogsMiddleware } from '../middleware/development-logs';
 import { viewRenderer } from '../views/view-renderer';
-import { configureUserAuthenticationRoutes } from 'src/api/user-authentication';
+import { configureUserAuthenticationRoutes } from '../api/user-authentication';
 import { configureMongoDBStore } from '../loaders/mongo-store';
 
 export interface WorkerAppConfiguration {

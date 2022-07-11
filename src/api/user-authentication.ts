@@ -2,7 +2,7 @@ import { Router, RequestHandler } from "express";
 import { ApiVersions } from "../contants/api-versions";
 import { Logger } from "winston";
 import { extendedUrlParser } from "../middleware/body-parser";
-import { UserController } from "src/controllers/user-controller";
+import { UserController } from "../controllers/user-controller";
 import { handleLogin } from "./handlers/handle-login";
 import { handleGetCurrentUser } from "./handlers/handle-get-current-user";
 import { handleSignup } from "./handlers/handle-signup";
