@@ -16,11 +16,13 @@ import { configureCookieParser } from '../middleware/cookie-parser';
 import { Logger } from 'winston';
 import { isPresent } from '@perfective/common';
 
+// TODO: Add HTTP/2, socket, and GraphQL support
 export class ExpressApp implements IApp {
   private _config: ExpressAppConfiguration;
   private _app: Express;
   private _logger: Logger;
 
+  // TODO: Add support for Route Tracing
   public constructor(config: ExpressAppConfiguration) {
     this._config = config;
     this._logger = config.logger;
@@ -35,6 +37,7 @@ export class ExpressApp implements IApp {
     return this._config.port;
   }
 
+  // TBD: Does this need to be exposed to overwrite?
   public set config(configuration: ExpressAppConfiguration) {
     this._config = configuration;
   }
@@ -44,9 +47,11 @@ export class ExpressApp implements IApp {
     this.configureOverrides();
     this.configureSessionStore();
     this.configureMiddleware();
-    // NOTE: Order Matters
+
+    // NOTE: Order Matters - routers then views
     this.configureApiRouters();
     this.configureViewRenderer();
+
     this.configurePort();
   }
 

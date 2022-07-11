@@ -16,19 +16,20 @@ const logger = configureFileLogger(isProduction);
 const worker = configureWorkerApp({ workerId: id, logger, isProduction });
 
 const server = http.createServer(worker.app);
+// TODO: CREATE SOCKET SUPPORT
 // const io = socketIO(server); // for socket support
 
 if (!sticky.listen(server, worker.port)) {
-  // MASTER
+  // MAIN
   server.once("listening", () => {
     logger.log('info', 
-      `Attention citizens of Master Realm ${id}, tune to channel ${worker.port}...Express Pokémon evolved.`
+      `Main Cluster ${id} running on port ${worker.port}.`
     );
   });
 } else {
   // WORKERS
   logger.log('info', 
-    `Attention citizens of Worker Realm ${id}, tune to channel ${worker.port}...Express Pokémon evolved.`
+    `Worker ${id} running on port ${worker.port}.`
   );
 }
 
