@@ -7,7 +7,6 @@ export class Model implements IModel {
     private _db: Db;
     private _collectionName: string = '';
     private _collection: Collection;
-    private _indexes: IndexDescription[] = [];
     private _logger: Logger;
 
     public constructor(db: Db, collectionName: string, logger: Logger) {
@@ -25,14 +24,6 @@ export class Model implements IModel {
         return this._collection;
     }
 
-    protected get indexes() {
-        return this._indexes;
-    }
-
-    protected set indexes(indexes: IndexDescription[]) {
-        this._indexes = indexes ?? [];
-    }
-
     public set logger(logger: Logger) {
         this._logger = logger;
     }
@@ -41,10 +32,10 @@ export class Model implements IModel {
         return this._logger;
     }
 
-    protected createIndexes = async (): Promise<void> => {
-        if (this._indexes.length) {
+    protected createIndexes = async (indexes: IndexDescription[]): Promise<void> => {
+        if (indexes.length) {
             try {
-                const result = await this._collection.createIndexes(this._indexes)
+                const result = await this._collection.createIndexes(indexes)
                 this._logger.log('info', JSON.stringify({ [this._collectionName]: { CreateIndexesResult: result } }, null, 5))
             } catch (err) {
                 this._logger.log('error', "Create Index Error")

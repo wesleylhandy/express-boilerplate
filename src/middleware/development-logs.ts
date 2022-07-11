@@ -11,6 +11,7 @@ export function developmentLogsMiddleware(isProduction: boolean, workerId: numbe
             return;
         }
         console.log("\n*************REQUEST MIDDLEWARE***************\n");
+        console.info("IP", req.ip);
         console.info("Path", req.path);
         console.info("Worker", workerId);
         console.info({ subdomain: res.locals.subdomain });

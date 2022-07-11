@@ -8,6 +8,7 @@ import { MongoDbQueryResponse } from "./query-response";
 import { User } from "./user.";
 import { saltPassword } from "../utils/salt";
 import { Collections } from "../contants/collections";
+import { userIndices } from "./user-collection-index";
 
 class UsersDAO extends Model implements IUsersDao {
 
@@ -17,47 +18,7 @@ class UsersDAO extends Model implements IUsersDao {
         return new UsersDAO(db, collectionName, logger);
       }
       this.logger = logger;
-      this.indexes = [
-        {
-          key: {
-            "roles.role": 1
-          },
-          name: "Role"
-        },
-        {
-          key: {
-            "devices.id": 1
-          },
-          name: "Devices"
-        },
-        {
-          key: {
-            username: 1
-          },
-          name: "UserName",
-          unique: true,
-          background: true
-        },
-        {
-          key: {
-            companyID: 1
-          },
-          name: "CompanyID"
-        },
-        {
-          key: {
-            "emails.value": 1
-          },
-          name: "Email"
-        },
-        {
-          key: {
-            dateAdded: -1
-          },
-          name: "DateAddedToDB"
-        }
-      ];
-      this.createIndexes();
+      this.createIndexes(userIndices);
     }
   
     getUser = async (query: Filter<Document> = {}): Promise<MongoDbQueryResponse<WithId<Document>>> => {
