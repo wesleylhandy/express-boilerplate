@@ -40,4 +40,6 @@ export interface ExpressAppConfiguration<StoreType extends SessionStoreType = Se
 export interface IApp<StoreType extends SessionStoreType = SessionStoreType>  {
     app: Express;
     config: ExpressAppConfiguration<StoreType>;
+    configureApplication: () => void;
+    port: number;
 }

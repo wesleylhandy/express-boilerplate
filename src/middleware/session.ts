@@ -38,6 +38,6 @@ export function configureSession(app: Express, logger: Logger, isProduction: boo
         app.use(session(options));
 
     } catch(error) {
-        logger.log('error', error);
+        logger.log('error', JSON.stringify({ type: "Session Could not Be started", error }, null, 5));
     }
 }

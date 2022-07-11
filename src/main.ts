@@ -10,32 +10,29 @@ const workerId = cluster.worker?.id ?? process.pid;
 const id = cluster.isPrimary ? process.pid : workerId;
 process.title = cluster.isPrimary ? 'ClusterServer' : `Worker ${workerId}`;
 
-const isProduction = valueFromEnvironment(EnvVars.NODE_ENV) === 'production'
+const isProduction = valueFromEnvironment(EnvVars.NODE_ENV) === 'production';
 
 const logger = configureFileLogger(isProduction);
-const app = configureWorkerApp({ workerId: id, logger, isProduction });
+const worker = configureWorkerApp({ workerId: id, logger, isProduction });
 
-const server = http.createServer(app);
+const server = http.createServer(worker.app);
 // const io = socketIO(server); // for socket support
 
-if (!sticky.listen(server, app.get("port"))) {
+if (!sticky.listen(server, worker.port)) {
   // MASTER
   server.once("listening", () => {
     logger.log('info', 
-      `Attention citizens of Master Realm ${id}, tune to channel ${app.get(
-        "port"
-      )}...Express Pokémon evolved.`
+      `Attention citizens of Master Realm ${id}, tune to channel ${worker.port}...Express Pokémon evolved.`
     );
   });
 } else {
   // WORKERS
   logger.log('info', 
-    `Attention citizens of Worker Realm ${id}, tune to channel ${app.get(
-      "port"
-    )}...Express Pokémon evolved.`
+    `Attention citizens of Worker Realm ${id}, tune to channel ${worker.port}...Express Pokémon evolved.`
   );
 }
 
+// TODO: Handle Process Signaling Queue
 process.on("message", message => {
   logger.log('info', `Process ${id} receives message '${JSON.stringify(message)}'`);
 });

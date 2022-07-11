@@ -11,6 +11,7 @@ export function developmentLogsMiddleware(isProduction: boolean, workerId: numbe
             return;
         }
         console.log("\n*************REQUEST MIDDLEWARE***************\n");
+        console.info("Path", req.path);
         console.info("Worker", workerId);
         console.info({ subdomain: res.locals.subdomain });
         console.info({'x-auth-token': req.get("x-auth-token")})

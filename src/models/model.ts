@@ -1,4 +1,4 @@
-import { Collection, Db, IndexDescription, Filter, Document, WithId } from 'mongodb'
+import { Collection, Db, IndexDescription, Filter, Document, ObjectId } from 'mongodb'
 import { Logger } from 'winston';
 import { IModel } from './i-model';
 import { MongoDbQueryResponse } from './query-response';
@@ -88,5 +88,9 @@ export class Model implements IModel {
             return { success: false, error: error as Error, value: null }
         }
         return { success: true, error: null, value: null }
+    }
+
+    public validateId(id: Parameters<typeof ObjectId.isValid>[0]): boolean {
+        return ObjectId.isValid(id);
     }
 }

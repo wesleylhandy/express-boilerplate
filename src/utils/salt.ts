@@ -7,16 +7,12 @@ export async function saltPassword(password: string, logger: Logger) {
   try {
     const salt = await bcrypt.genSalt(saltFactor);
     try {
-      const hash = bcrypt.hash(password, salt);
-      return hash;
-    } catch (err) {
-      logger.error("Unable to create Hash");
-      console.error(err);
-      return password;
+      return bcrypt.hash(password, salt);
+    } catch (error) {
+      throw new Error(`Unable to create Hash: ${JSON.stringify(error, null, 5)}`);
     }
-  } catch (err) {
-    logger.error("Unable to create Salt");
-    console.error(err);
-    return password;
+  } catch (error) {
+    logger.log('error', `Unable to create Salt: ${JSON.stringify(error, null, 5)}`);
   }
+  return password;
 }

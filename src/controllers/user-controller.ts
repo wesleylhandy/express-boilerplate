@@ -6,6 +6,7 @@ import { getUsersDAO } from '../models/users-dao';
 import { MongoClient } from "mongodb";
 import { IUserController } from './i-user-controller';
 import { IUsersDao } from '../models/i-users-dao';
+import { Collections } from '../contants/collections';
 
 export class UserController implements IUserController {
     private _dbName: string = valueFromEnvironment(EnvVars.DBNAME) ?? 'local_dev';
@@ -35,7 +36,7 @@ export class UserController implements IUserController {
         this._logger.log('info', `Connected to DB: ${this._dbName}`);
 
       } catch (error) {
-        this._logger.log('error', JSON.stringify(error, null, 5));
+        this._logger.log('error', `MongoDB Connection Error on DB ${this._dbName}, Collection: ${Collections.User}: ${JSON.stringify(error, null, 5)}`);
         typeof process.send !== 'undefined' && process.send(`DB Connection Error on ${this._workerId}.`);
       }
     }

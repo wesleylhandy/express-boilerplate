@@ -9,11 +9,11 @@ export function configureMongoDBStore(logger: Logger) {
     const store = new MongoDBStore({
         uri: valueFromEnvironment<string>(EnvVars.MONGODB_CONNECT_STRING)
             ?? "mongodb://localhost:27017/connect_mongodb_session",
-        collection: valueFromEnvironment<string>(EnvVars.SESSION_ID) ?? ''
+        collection: valueFromEnvironment<string>(EnvVars.SESSION_ID) ?? 'dev_store'
     });
 
     store.on("error", (error: unknown) => {
-        logger.error(error);
+        logger.log('error', `MongoSessionStore Error: ${JSON.stringify(error, null, 5)}`);
     });
 
     return store;

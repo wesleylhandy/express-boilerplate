@@ -2,15 +2,13 @@ import { NextFunction, Request, Response } from "express";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import onHeaders from "on-headers";
 import { v4 as uuidv4 } from "uuid";
-import { decrypt, encrypt } from "./crypto"
+import { decrypt, encrypt, defaultIV } from "./crypto"
 import crypto, { BinaryLike, KeyObject} from "crypto";
 import { CsrfError } from "./csrf-error";
 import { Algorithms } from "../contants/encryption";
 import { EnvVars, valueFromEnvironment } from "./environment-variables";
 
 // TODO: Refactor and simplify
-
-export const defaultIV = crypto.randomBytes(256);
 
 const DEFAULT_EXPIRATION_IN_MINUTES = 60;
 const DEFAULT_HEADER_NAME = "x-csrf-jwt";

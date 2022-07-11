@@ -19,7 +19,7 @@ export function configureWorkerApp({ workerId, logger, isProduction}: WorkerAppC
         config();
     }
 
-    const expressApp = new ExpressApp({
+    const worker = new ExpressApp({
         apiRouters: [configureUserAuthenticationRoutes(workerId, logger)], 
         isProduction,
         logger,
@@ -32,5 +32,7 @@ export function configureWorkerApp({ workerId, logger, isProduction}: WorkerAppC
         workerId,
     });
 
-    return expressApp.app;
+    worker.configureApplication();
+
+    return worker;
   }

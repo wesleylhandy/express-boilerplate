@@ -14,6 +14,7 @@ import { configureRateLimit } from '../middleware/rate-limit';
 import { ExpressAppConfiguration, IApp } from './i-app';
 import { configureCookieParser } from '../middleware/cookie-parser';
 import { Logger } from 'winston';
+import { isPresent } from '@perfective/common';
 
 export class ExpressApp implements IApp {
   private _config: ExpressAppConfiguration;
@@ -30,20 +31,30 @@ export class ExpressApp implements IApp {
     return this._app;
   }
 
+  public get port() {
+    return this._config.port;
+  }
+
   public set config(configuration: ExpressAppConfiguration) {
     this._config = configuration;
   }
 
-  public configureApplication() {
+  public configureApplication = () => {
     this.hardenServer();
     this.configureOverrides();
+    this.configureSessionStore();
+    this.configureMiddleware();
+    // NOTE: Order Matters
+    this.configureApiRouters();
+    this.configureViewRenderer();
+    this.configurePort();
   }
 
-  protected configureRouteLogging() {
+  protected configureRouteLogging = () => {
     configureRouteLogging(this._app, this._config.routeLoggingOptions);
   }
 
-  protected hardenServer() {
+  protected hardenServer = () => {
     // use helmetjs to set common secure headers
     this._app.use(helmet());
     this._app.use(helmet.referrerPolicy({ policy: "no-referrer-when-downgrade" }));
@@ -64,7 +75,7 @@ export class ExpressApp implements IApp {
     configureRateLimit(this._app, this._config.rateLimitOptions);
   }
 
-  protected configureOverrides() {
+  protected configureOverrides = () => {
   //allow PUT, PATCH, DELETE via _method param
     this._app.use(methodOverride("_method"));
     // override with different headers; last one takes precedence
@@ -84,28 +95,31 @@ export class ExpressApp implements IApp {
     this._app.use(multer().array('files'));
   }
 
-  protected configureSessionStore() {
-    configureSession(this._app, this._logger, this._config.isProduction)
+  protected configureSessionStore = () => {
+    if (isPresent(this._config.sessionOptions)) {
+      configureSession(this._app, this._logger, this._config.isProduction, this._config.sessionOptions)
+    }
   }
 
-  protected configureMiddleware() {
+  protected configureMiddleware = () => {
     this._config.middleware?.forEach(middleware => {
       this._app.use(middleware);
     });
   }
 
-  protected configurePort() {
+  protected configurePort = () => {
     this._app.set("port", this._config.port);
   }
 
-  protected configureApiRouters() {
+  protected configureApiRouters = () => {
     this._config.apiRouters.forEach(api => {
+      this._logger.log('info', `Router Initialized: ${api[0]}`);
       this._app.use(api[0], api[1]);
     })
   } 
 
-  protected configureViewRenderer() {
-    this._app.use('*', this._config.viewRenderer);
+  protected configureViewRenderer = () => {
+    this._app.get('/', this._config.viewRenderer);
   }
 
 }

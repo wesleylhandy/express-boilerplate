@@ -6,6 +6,7 @@ import { UserController } from "../controllers/user-controller";
 import { handleLogin } from "./handlers/handle-login";
 import { handleGetCurrentUser } from "./handlers/handle-get-current-user";
 import { handleSignup } from "./handlers/handle-signup";
+import { Collections } from "../contants/collections";
 
 export function configureUserAuthenticationRoutes(
   workerId: number,
@@ -22,7 +23,7 @@ export function configureUserAuthenticationRoutes(
           process.send("DB.Closed");
         }
       } catch (error) {
-        logger.log('error', JSON.stringify(error, null, 5))
+        logger.log('error', `${Collections.User} Failed to Close: ${JSON.stringify(error, null, 5)}`)
       }
     }
   });

@@ -19,7 +19,7 @@ export function configureRedisStore(
     });
 
     client.on("error", (error: unknown) => {
-        logger.error(error);
+        logger.log('error', `RedisSession Error: ${JSON.stringify(error, null, 5)}`);
     });
 
     return store;

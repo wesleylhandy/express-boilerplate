@@ -4,8 +4,9 @@ import { UserSchema } from "../../utils/schema";
 import { Logger } from "winston";
 import { isAbsent } from '@perfective/common'
 import { signedToken } from "../../utils/sign-token";
+import { Collections } from "../../contants/collections";
 
-export async function handleSignup(logger: Logger, usersDAO?: IUsersDao) {
+export function handleSignup(logger: Logger, usersDAO?: IUsersDao) {
     return async (request: Request<never, unknown, { username: string; password: string; repeat_password: string }>, response: Response) => {
         try {
             const { username, password, repeat_password } = request.body;
@@ -18,7 +19,7 @@ export async function handleSignup(logger: Logger, usersDAO?: IUsersDao) {
                 throw new Error(error.details[0].message)
             } 
             if (isAbsent(usersDAO)) {
-                throw new Error('Connection to Users collection failed.')
+                throw new Error(`Connection to ${Collections.User} collection failed.`)
             }
             const result = await usersDAO.addUser(
                 username,
@@ -33,7 +34,7 @@ export async function handleSignup(logger: Logger, usersDAO?: IUsersDao) {
 
             response.json({ isLoggedIn: true, token: signedToken(payload), ...payload });
         } catch (error) {
-            logger.log('error', JSON.stringify(error, null, 5))
+            logger.log('error', `Signup Error: ${JSON.stringify(error, null, 5)}`)
             response.statusCode = 401;
             response.json({ error, isLoggedIn: false });
         }

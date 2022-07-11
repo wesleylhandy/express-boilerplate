@@ -25,6 +25,7 @@ export const configureFileLogger = (isProduction: boolean) => {
         logger.add(new transports.Console({
             format: format.simple(),
         }))
+        logger.log('info', `NOT PRODUCTION ENVIRONMENT`)
     }
 
     return logger;

@@ -3,9 +3,11 @@ import bcrypt from 'bcrypt';
 import { IUsersDao } from "./i-users-dao";
 import { Db, Document, Filter, MongoClient, ObjectId, WithId } from "mongodb";
 import { Logger } from "winston";
+import { isPresent } from '@perfective/common'
 import { MongoDbQueryResponse } from "./query-response";
 import { User } from "./user.";
 import { saltPassword } from "../utils/salt";
+import { Collections } from "../contants/collections";
 
 class UsersDAO extends Model implements IUsersDao {
 
@@ -105,12 +107,10 @@ class UsersDAO extends Model implements IUsersDao {
 }
   
 export const getUsersDAO = async (connection: MongoClient, dbName: string, logger: Logger) => {
-    const db = connection ? connection.db(dbName) : null;
-    if (db) {
-        const usersDAO = new UsersDAO(db, "users", logger);
-        return usersDAO;
-    } else {
-        throw new Error("Unable to Connect to Users Collection");
-    }
+    const db = connection.db(dbName);
+    if (isPresent(db)) {
+        return new UsersDAO(db, Collections.User, logger);
+    } 
+    throw new Error(`Unable to Connect to ${Collections.User} Collection`);
 };
   
